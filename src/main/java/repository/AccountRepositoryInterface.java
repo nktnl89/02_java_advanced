@@ -1,15 +1,17 @@
 package repository;
 
+import exception.AccountNotFoundException;
 import model.Account;
 import model.User;
 
 import java.util.ArrayList;
 
 public interface AccountRepositoryInterface {
-    ArrayList<Account> getListAccounts(String catalog);
+    ArrayList<Account> getListAccountsFromFile();
 
-    void writeAccountToFile(Account account, String catalog);
+    void writeAccountToFile(Account account);
 
-    Account getAccountByOwner(User user, String catalog);
+    Account getAccountFromFileById(int id) throws AccountNotFoundException;
 
+    Account getAccount(int id) throws AccountNotFoundException;
 }
