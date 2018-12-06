@@ -63,7 +63,7 @@ public class AccountRepositoryImpl implements AccountRepositoryInterface {
     }
 
     public void writeAccountListToFiles(ArrayList<Account> accounts) {
-        accounts.forEach(account -> writeAccountToFile(account));
+        accounts.forEach(this::writeAccountToFile);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class AccountRepositoryImpl implements AccountRepositoryInterface {
             }
 
         }
-        throw new AccountNotFoundException("Account not found with id ", id);
+        throw new AccountNotFoundException("Account not found", id);
         //return null;
     }
 }

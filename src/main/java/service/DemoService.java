@@ -2,66 +2,86 @@ package service;
 
 import model.Account;
 import model.User;
+import org.slf4j.Logger;
 import repository.impl.AccountRepositoryImpl;
 import service.impl.AccountServiceImpl;
 
 import java.util.ArrayList;
+import java.util.concurrent.*;
 
-import static util.UtilService.*;
+import static service.UtilService.*;
 
 public class DemoService {
 
     private AccountRepositoryImpl accountRepository;
-    private AccountServiceImpl accountService;
+    private static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DemoService.class);
 
     public void startDemo() {
-        String dir = "src/main/resources";
+        String dir = "src/main/resources/data";
         accountRepository = new AccountRepositoryImpl();
         accountRepository.setDir(dir);
-        accountService = new AccountServiceImpl();
+        AccountServiceImpl accountService = new AccountServiceImpl();
 
-        initData(dir);
+        accountRepository.setAccountArrayList(initData());
+
         ArrayList<Account> accountArrayList = accountRepository.getListAccountsFromFile();
         accountRepository.setAccountArrayList(accountArrayList);
-        accountArrayList.forEach(System.out::println);
+        accountArrayList.forEach(account -> LOGGER.info(account.toString()));
+        LOGGER.info("start balance: " + accountService.getSummaryBalances(accountArrayList) + "$");
 
-        System.out.println("");
-        System.out.println("Starting balance: " + accountService.getSummaryBalances(accountArrayList) + "$");
-        System.out.println("_____________________________________________________________");
-        System.out.println();
+//!!!!!!ЭТО РАБОТАЕТ С РАНАБЛ, НО ДЕЛАЕТ БОЛЬШЕ ОПЕРАЦИЙ ЧЕМ НАДО!!!
+//        CountDownLatch countDownLatch = new CountDownLatch(10);
+//        ExecutorService executor = Executors.newFixedThreadPool(5);
+//        try {
+//            while (countDownLatch.getCount() != 0) {
+//                executor.submit(new TransactionService(accountRepository, accountService, countDownLatch));
+//                System.out.println(countDownLatch.getCount());
+//            }
+//            countDownLatch.await();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
 
-        for (int i = 0; i < 10; i++) {
-            TransactionService transactionService = new TransactionService(accountRepository, accountService);
+//////////ЭТО ЕСЛИ ОТЧАЮСЬ СДЕЛАТЬ ЧЕРЕЗ РАНАБЛ
+        ExecutorService executor = Executors.newFixedThreadPool(20);
+        int counterCorrectOperations = 0;
+        int counterOperationsAtAll = 0;
+        while (counterCorrectOperations < 1000) {
+            Future<Boolean> result = executor.submit(new TransactionServiceCallable(accountRepository, accountService));
+            counterOperationsAtAll++;
+            try {
+                if (result.get(10, TimeUnit.MILLISECONDS)) {
+                    counterCorrectOperations++;
+                    LOGGER.info("Correct operation №{}", counterCorrectOperations);
+                }
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
 
-            new Thread(transactionService).start();
+        LOGGER.info("All operations - {}", counterOperationsAtAll);
+        LOGGER.info("Correct operations - {}", counterCorrectOperations);
 
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+        }
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         accountRepository.writeAccountListToFiles(accountRepository.getAccountArrayList());
         ArrayList<Account> afterTransaction = accountRepository.getListAccountsFromFile();
-        afterTransaction.forEach(System.out::println);
+        afterTransaction.forEach(account -> LOGGER.info(account.toString()));
 
-        System.out.println("");
-        System.out.println("Starting balance: " + accountService.getSummaryBalances(afterTransaction) + "$");
-        System.out.println("_____________________________________________________________");
-        System.out.println();
-
-    }
-
-    private void initData(String dir) {
-        ArrayList<Account> accountArrayList = new ArrayList<>();
-        accountArrayList.add(new Account(1, new User("LarionovA"), getRandomLong()));
-        accountArrayList.add(new Account(2, new User("KorostelevK"), getRandomLong()));
-        accountArrayList.add(new Account(3, new User("BuneginP"), getRandomLong()));
-        accountArrayList.add(new Account(4, new User("DavlatovU"), getRandomLong()));
-        accountArrayList.add(new Account(5, new User("GabdrahmanovM"), getRandomLong()));
-        accountArrayList.add(new Account(6, new User("KurbanovR"), getRandomLong()));
-        accountArrayList.add(new Account(7, new User("TararuevaU"), getRandomLong()));
-        accountArrayList.add(new Account(8, new User("NikitinA"), getRandomLong()));
-        accountArrayList.add(new Account(9, new User("MoskovetcL"), getRandomLong()));
-
-        accountRepository.writeAccountListToFiles(accountArrayList);
+        LOGGER.info("Finish balance: " + accountService.getSummaryBalances(afterTransaction) + "$");
     }
 
 
