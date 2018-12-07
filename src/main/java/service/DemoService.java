@@ -1,7 +1,6 @@
 package service;
 
 import model.Account;
-import model.User;
 import org.slf4j.Logger;
 import repository.impl.AccountRepositoryImpl;
 import service.impl.AccountServiceImpl;
@@ -13,12 +12,11 @@ import static service.UtilService.*;
 
 public class DemoService {
 
-    private AccountRepositoryImpl accountRepository;
-    private static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DemoService.class);
+    private static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(service.DemoService.class);//"DemoService");
 
     public void startDemo() {
         String dir = "src/main/resources/data";
-        accountRepository = new AccountRepositoryImpl();
+        AccountRepositoryImpl accountRepository = new AccountRepositoryImpl();
         accountRepository.setDir(dir);
         AccountServiceImpl accountService = new AccountServiceImpl();
 
@@ -42,18 +40,16 @@ public class DemoService {
 //            e.printStackTrace();
 //        }
 
-
-//////////ЭТО ЕСЛИ ОТЧАЮСЬ СДЕЛАТЬ ЧЕРЕЗ РАНАБЛ
         ExecutorService executor = Executors.newFixedThreadPool(20);
         int counterCorrectOperations = 0;
         int counterOperationsAtAll = 0;
         while (counterCorrectOperations < 1000) {
-            Future<Boolean> result = executor.submit(new TransactionServiceCallable(accountRepository, accountService));
+            Future result = executor.submit(new TransactionServiceCallable(accountRepository, accountService));
             counterOperationsAtAll++;
             try {
-                if (result.get(10, TimeUnit.MILLISECONDS)) {
+                if ((Boolean) result.get(10, TimeUnit.MILLISECONDS)) {
                     counterCorrectOperations++;
-                    LOGGER.info("Correct operation №{}", counterCorrectOperations);
+                    LOGGER.debug("Correct operation №{}", counterCorrectOperations);
                 }
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 LOGGER.error(e.getMessage(), e);
@@ -80,10 +76,7 @@ public class DemoService {
         accountRepository.writeAccountListToFiles(accountRepository.getAccountArrayList());
         ArrayList<Account> afterTransaction = accountRepository.getListAccountsFromFile();
         afterTransaction.forEach(account -> LOGGER.info(account.toString()));
-
         LOGGER.info("Finish balance: " + accountService.getSummaryBalances(afterTransaction) + "$");
     }
-
-
 }
 

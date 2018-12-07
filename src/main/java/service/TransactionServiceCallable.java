@@ -15,20 +15,18 @@ public class TransactionServiceCallable implements Callable {
     private AccountRepositoryImpl accountRepository;
     private AccountServiceImpl accountService;
 
-    private final long CONST_SUM = 1L;
-    private static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(TransactionService.class);
+    private final long CONST_SUM = 100L;
+    private static Logger LOGGER = org.slf4j.LoggerFactory.getLogger("TransactionService");
 
-    public TransactionServiceCallable(AccountRepositoryImpl accountRepository, AccountServiceImpl accountService) {
+    TransactionServiceCallable(AccountRepositoryImpl accountRepository, AccountServiceImpl accountService) {
         this.accountRepository = accountRepository;
         this.accountService = accountService;
-
     }
 
     private void transferSumBetweenAccounts(Account account1, Account account2, long sum) {
         account1.setBalance(account1.getBalance() - sum);
         account2.setBalance(account2.getBalance() + sum);
-        LOGGER.info(account1 + " get from " + account2 + CONST_SUM + "$");
-        //LOGGER.debug(account1 + " get from " + account2 + CONST_SUM + "$");
+        LOGGER.debug(account1 + " get from " + account2 + CONST_SUM + "$");
     }
 
     private void makeTransferBetweenAccounts(Account tmpFirstAccount, Account tmpSecondAccount) throws AccountNotEnoughMoney {
@@ -66,6 +64,7 @@ public class TransactionServiceCallable implements Callable {
             Account tmpSecondAccount = accountRepository.getAccount(secondAccountId);
 
             tmpFirstAccount.getReentrantLock().lock();
+
             tmpSecondAccount.getReentrantLock().lock();
             try {
                 makeTransferBetweenAccounts(tmpFirstAccount, tmpSecondAccount);
@@ -80,7 +79,6 @@ public class TransactionServiceCallable implements Callable {
             LOGGER.warn(e.getMessage() + " with id = {}", e.getId());//, e);
             isOperationCorrect = false;
         }
-
         return isOperationCorrect;
     }
 }

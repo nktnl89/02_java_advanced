@@ -2,11 +2,11 @@ package repository.impl;
 
 import exception.AccountNotFoundException;
 import model.Account;
-import model.User;
 import repository.AccountRepositoryInterface;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class AccountRepositoryImpl implements AccountRepositoryInterface {
     private String dir;
@@ -48,6 +48,14 @@ public class AccountRepositoryImpl implements AccountRepositoryInterface {
                 }
             }
         }
+
+        accountArrayList.sort(new Comparator<Account>() {
+            public int compare(Account o1, Account o2) {
+                if (o1.getId() == o2.getId())
+                    return 0;
+                return o1.getId() < o2.getId() ? -1 : 1;
+            }
+        });
         return accountArrayList;
     }
 
@@ -93,9 +101,7 @@ public class AccountRepositoryImpl implements AccountRepositoryInterface {
             if (account.getId() == id) {
                 return account;
             }
-
         }
         throw new AccountNotFoundException("Account not found", id);
-        //return null;
     }
 }

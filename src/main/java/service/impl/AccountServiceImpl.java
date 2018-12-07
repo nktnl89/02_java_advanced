@@ -4,7 +4,6 @@ import model.Account;
 import service.AccountServiceInterface;
 
 import java.util.ArrayList;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class AccountServiceImpl implements AccountServiceInterface {
     @Override

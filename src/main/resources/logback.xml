@@ -15,22 +15,11 @@
         </encoder>
     </appender>
 
-    <root level="info">
-        <appender-ref ref="consoleAppender"/>
+    <root level="DEBUG">
         <appender-ref ref="fileAppender"/>
     </root>
 
-    <logger name="TransactionService" level="INFO">
-        <appender-ref ref="consoleAppender"/>
-        <appender-ref ref="fileAppender"/>
-    </logger>
-
-
-    <logger name="TransactionService" level="WARN">
-        <appender-ref ref="consoleAppender"/>
-    </logger>
-
-    <logger name="DemoService" level="INFO">
+    <logger name="service.DemoService" level="INFO">
         <appender-ref ref="consoleAppender"/>
     </logger>
 
